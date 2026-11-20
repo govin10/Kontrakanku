@@ -114,7 +114,7 @@ function navLink(string $label, string $page, string $icon, string $currentPage,
                 <div class="user-avatar"><?= strtoupper(substr(currentUserName(), 0, 1)) ?></div>
                 <div class="user-info">
                     <div class="user-name"><?= htmlspecialchars(currentUserName()) ?></div>
-                    <div class="user-role"><?= isAdmin() ? '👑 Admin' : '🏠 Penghuni' ?></div>
+                    <div class="user-role"><?= isAdmin() ? 'Admin' : 'Penghuni' ?></div>
                 </div>
                 <a href="<?= BASE_URL ?>/logout.php" class="btn-logout" title="Logout">
                     <i class="fa-solid fa-right-from-bracket"></i>

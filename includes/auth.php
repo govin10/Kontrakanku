@@ -27,6 +27,10 @@ function isAdmin(): bool {
     return isset($_SESSION['role']) && $_SESSION['role'] === 'admin';
 }
 
+function isSuperAdmin(): bool {
+    return isAdmin() && isset($_SESSION['email']) && defined('SUPER_ADMIN_EMAIL') && $_SESSION['email'] === SUPER_ADMIN_EMAIL;
+}
+
 function isLoggedIn(): bool {
     return isset($_SESSION['user_id']);
 }

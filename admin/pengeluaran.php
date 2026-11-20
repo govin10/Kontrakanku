@@ -149,7 +149,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <tr>
                     <td class="text-muted"><?= $i + 1 ?></td>
                     <td class="fw-600"><?= htmlspecialchars($p['nama_item']) ?></td>
-                    <td class="text-muted"><?= $p['keterangan'] ? htmlspecialchars($p['keterangan']) : '—' ?></td>
+                    <td class="text-muted"><?= $p['keterangan'] ? htmlspecialchars(trim(preg_replace('/\[Auto-Biaya-\d+\]/', '', $p['keterangan']))) : '—' ?></td>
                     <td class="text-muted"><?= date('d M Y', strtotime($p['tanggal'])) ?></td>
                     <td><span class="chip"><?= htmlspecialchars($p['input_nama'] ?? 'Sistem') ?></span></td>
                     <td class="text-right fw-600 text-warning"><?= formatRupiah($p['jumlah']) ?></td>

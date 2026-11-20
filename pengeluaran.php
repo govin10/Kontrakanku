@@ -141,7 +141,7 @@ require_once __DIR__ . '/includes/header.php';
                     <td>
                         <div class="fw-600"><?= htmlspecialchars($p['nama_item']) ?></div>
                     </td>
-                    <td class="text-muted"><?= $p['keterangan'] ? htmlspecialchars($p['keterangan']) : '—' ?></td>
+                    <td class="text-muted"><?= $p['keterangan'] ? htmlspecialchars(trim(preg_replace('/\[Auto-Biaya-\d+\]/', '', $p['keterangan']))) : '—' ?></td>
                     <td class="text-muted"><?= date('d M Y', strtotime($p['tanggal'])) ?></td>
                     <td>
                         <span class="chip"><?= htmlspecialchars($p['input_nama'] ?? 'Sistem') ?></span>

@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $belumBayar = $stmtBelum->fetchAll();
 
             if (empty($belumBayar)) {
-                $msg = 'Semua penghuni sudah membayar bulan ini! 🎉';
+                $msg = 'Semua penghuni sudah membayar bulan ini!';
                 $msgType = 'success';
             } else {
                 $insNotif = $db->prepare(
@@ -145,7 +145,7 @@ require_once __DIR__ . '/../includes/header.php';
                 <?php if ($jmlBelumBayar > 0): ?>
                 <span class="text-danger fw-600"><?= $jmlBelumBayar ?> penghuni belum bayar</span>
                 <?php else: ?>
-                <span class="text-success fw-600">Semua sudah lunas! 🎉</span>
+                <span class="text-success fw-600">Semua sudah lunas!</span>
                 <?php endif; ?>
             </p>
             <?php else: ?>

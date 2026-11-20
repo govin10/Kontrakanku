@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div class="input-group">
                         <i class="fa-solid fa-envelope input-icon"></i>
                         <input type="email" id="email" name="email" class="form-control"
-                            placeholder="contoh@email.com"
+                            placeholder="contoh@gmail.com"
                             value="<?= htmlspecialchars($_POST['email'] ?? '') ?>" required>
                     </div>
                 </div>
@@ -133,8 +133,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
 
-        <div class="auth-footer">
-            Sudah punya akun? <a href="<?= BASE_URL ?>/login.php">Masuk di sini</a>
+        <div class="auth-footer" style="display:flex; flex-direction:column; gap:8px;">
+            <div>
+                Sudah punya akun? <a href="<?= BASE_URL ?>/login.php">Masuk di sini</a>
+            </div>
+            <div style="font-size:12.5px; border-top:1px solid var(--border); padding-top:8px;">
+                Pengelola kontrakan? <a href="<?= BASE_URL ?>/register_admin.php" style="color:var(--accent-secondary);"><i class="fa-solid fa-user-shield"></i> Registrasi Admin</a>
+            </div>
         </div>
     </div>
 </div>

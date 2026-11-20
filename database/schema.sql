@@ -87,6 +87,19 @@ CREATE TABLE IF NOT EXISTS `notifikasi` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -------------------------------------------
+-- Table: password_resets
+-- -------------------------------------------
+CREATE TABLE IF NOT EXISTS `password_resets` (
+    `id`         INT AUTO_INCREMENT PRIMARY KEY,
+    `email`      VARCHAR(100) NOT NULL,
+    `token`      VARCHAR(64)  NOT NULL UNIQUE,
+    `expires_at` DATETIME     NOT NULL,
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX `idx_token` (`token`),
+    INDEX `idx_email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -------------------------------------------
 -- NOTE: Jalankan setup.php di browser untuk membuat
 --       akun admin pertama secara otomatis.
 --       URL: http://localhost/system-keuangan-kontrakan/setup.php

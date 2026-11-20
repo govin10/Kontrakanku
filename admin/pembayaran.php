@@ -27,6 +27,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
                 keterangan    = VALUES(keterangan),
                 updated_by    = VALUES(updated_by)"
         )->execute([$userId, $biayaId, $status, $tglBayar, $ket ?: null, currentUserId()]);
+
+        // Cek & sinkronkan otomatis ke pengeluaran jika semua penghuni aktif telah lunas
+        $sync = syncBiayaToPengeluaranIfAllLunas($db, $biayaId);
+        if ($sync['action'] === 'inserted') {
+            header("Location: pembayaran.php?bulan={$fBulan}&tahun={$fTahun}&all_lunas=1&auto_count={$sync['count']}");
+            exit;
+        } elseif ($sync['action'] === 'removed') {
+            header("Location: pembayaran.php?bulan={$fBulan}&tahun={$fTahun}&auto_removed=1");
+            exit;
+        }
     }
 
     // PRG: redirect agar refresh browser tidak re-submit & penghuni langsung lihat update
@@ -34,8 +44,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     exit;
 }
 
+// Handle: Tandai Semua Lunas sekaligus
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'mark_all_lunas') {
+    $biayaId = (int)$_POST['biaya_id'];
+    $fBulan  = (int)($_POST['filter_bulan'] ?? date('n'));
+    $fTahun  = (int)($_POST['filter_tahun'] ?? date('Y'));
+
+    if ($biayaId > 0) {
+        $penghuni = $db->query("SELECT id FROM users WHERE role='penghuni' AND status='aktif'")->fetchAll();
+        $ins = $db->prepare(
+            "INSERT INTO pembayaran (user_id, biaya_id, status, tanggal_bayar, updated_by)
+             VALUES (?, ?, 'lunas', CURDATE(), ?)
+             ON DUPLICATE KEY UPDATE
+                status        = 'lunas',
+                tanggal_bayar = COALESCE(tanggal_bayar, CURDATE()),
+                updated_by    = VALUES(updated_by)"
+        );
+        foreach ($penghuni as $p) {
+            $ins->execute([$p['id'], $biayaId, currentUserId()]);
+        }
+
+        $sync = syncBiayaToPengeluaranIfAllLunas($db, $biayaId);
+        header("Location: pembayaran.php?bulan={$fBulan}&tahun={$fTahun}&all_lunas=1&auto_count={$sync['count']}");
+        exit;
+    }
+}
+
 $msg = $msgType = '';
-if (isset($_GET['updated'])) {
+if (isset($_GET['all_lunas'])) {
+    $autoCount = (int)($_GET['auto_count'] ?? 0);
+    $msg = "Status pembayaran berhasil diperbarui! Semua penghuni telah lunas — " . ($autoCount > 0 ? "{$autoCount} rincian biaya bulanan otomatis dicatat ke menu Pengeluaran!" : "biaya bulanan otomatis disinkronkan ke Pengeluaran.");
+    $msgType = 'success';
+} elseif (isset($_GET['auto_removed'])) {
+    $msg = 'Status pembayaran diperbarui. Pengeluaran otomatis ditarik kembali karena masih ada penghuni yang belum lunas.';
+    $msgType = 'warning';
+} elseif (isset($_GET['updated'])) {
     $msg = 'Status pembayaran berhasil diperbarui!';
     $msgType = 'success';
 }
@@ -68,6 +111,11 @@ if ($biayaAktif) {
 $jmlLunas = count(array_filter($statusList, fn($r) => ($r['status'] ?? '') === 'lunas'));
 $jmlBelum = count($statusList) - $jmlLunas;
 
+// Pastikan jika semua penghuni aktif saat ini sudah lunas, pengeluaran otomatis tersinkron
+if ($biayaAktif && count($statusList) > 0 && $jmlBelum === 0) {
+    syncBiayaToPengeluaranIfAllLunas($db, $biayaAktif['id']);
+}
+
 $pageTitle    = 'Update Pembayaran';
 $pageSubtitle = 'Kelola status iuran penghuni';
 require_once __DIR__ . '/../includes/header.php';
@@ -82,7 +130,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <?php if ($msg): ?>
 <div class="alert alert-<?= $msgType ?> fade-in" data-dismiss="4000">
-    <i class="fa-solid fa-circle-check"></i> <?= htmlspecialchars($msg) ?>
+    <i class="fa-solid fa-<?= $msgType === 'warning' ? 'circle-exclamation' : 'circle-check' ?>"></i> <?= htmlspecialchars($msg) ?>
 </div>
 <?php endif; ?>
 
@@ -144,6 +192,24 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<?php if ($jmlBelum === 0 && count($statusList) > 0): ?>
+<!-- Banner Semua Penghuni Lunas -->
+<div class="card fade-in mb-20" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(124, 111, 239, 0.12) 100%); border: 1px solid rgba(16, 185, 129, 0.4);">
+    <div class="d-flex justify-between align-center flex-wrap gap-16">
+        <div class="d-flex align-center gap-12">
+            <div style="font-size:32px"></div>
+            <div>
+                <div class="fw-700" style="color:var(--success);font-size:15px">Semua Penghuni Telah Lunas!</div>
+                <div class="text-muted fs-13">Seluruh biaya bulanan untuk periode <strong><?= namaBulan($filterBulan) . ' ' . $filterTahun ?></strong> telah otomatis dicatat ke menu Pengeluaran.</div>
+            </div>
+        </div>
+        <a href="pengeluaran.php?bulan=<?= $filterBulan ?>&tahun=<?= $filterTahun ?>" class="btn btn-sm btn-primary">
+            <i class="fa-solid fa-receipt"></i> Buka Pengeluaran
+        </a>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Progress Bar -->
 <?php $pct = count($statusList) > 0 ? round($jmlLunas / count($statusList) * 100) : 0; ?>
 <div class="card fade-in mb-20">
@@ -159,8 +225,19 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- Tabel Status Pembayaran -->
 <div class="card fade-in">
-    <div class="card-header">
+    <div class="card-header d-flex justify-between align-center flex-wrap gap-12">
         <h3>Daftar Status Pembayaran — <?= namaBulan($filterBulan) . ' ' . $filterTahun ?></h3>
+        <?php if (!empty($statusList) && $jmlBelum > 0): ?>
+        <form method="POST" action="pembayaran.php" style="margin:0">
+            <input type="hidden" name="action" value="mark_all_lunas">
+            <input type="hidden" name="biaya_id" value="<?= $biayaAktif['id'] ?>">
+            <input type="hidden" name="filter_bulan" value="<?= $filterBulan ?>">
+            <input type="hidden" name="filter_tahun" value="<?= $filterTahun ?>">
+            <button type="submit" class="btn btn-sm btn-success" data-confirm="Tandai pembayaran seluruh penghuni aktif sebagai LUNAS?&#10;&#10;Biaya bulanan periode ini akan otomatis dicatat ke tabel Pengeluaran!">
+                <i class="fa-solid fa-check-double"></i> Tandai Semua Lunas
+            </button>
+        </form>
+        <?php endif; ?>
     </div>
     <?php if (empty($statusList)): ?>
     <div class="empty-state"><i class="fa-solid fa-users"></i><p>Tidak ada penghuni aktif.</p></div>

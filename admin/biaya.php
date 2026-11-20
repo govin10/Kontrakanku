@@ -60,6 +60,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 );
                 foreach ($penghuni as $p) $insPay->execute([$p['id'], $biayaId]);
             }
+
+            // Jika periode ini semua penghuni sudah lunas, sinkronkan data biaya ke pengeluaran
+            syncBiayaToPengeluaranIfAllLunas($db, $biayaId);
+
             $msgType = 'success';
         } catch (Exception $e) {
             $msg = 'Error: ' . $e->getMessage(); $msgType = 'danger';
@@ -279,11 +283,11 @@ function hitungTotal() {
 function fillEditForm(data) {
     document.getElementById('inp_bulan').value   = data.bulan;
     document.getElementById('inp_tahun').value   = data.tahun;
-    document.getElementById('inp_sewa').value    = data.total_sewa;
-    document.getElementById('inp_listrik').value = data.total_listrik;
-    document.getElementById('inp_air').value     = data.total_air;
-    document.getElementById('inp_wifi').value    = data.total_wifi;
-    document.getElementById('inp_lain').value    = data.total_lain;
+    document.getElementById('inp_sewa').value    = parseInt(data.total_sewa)    || 0;
+    document.getElementById('inp_listrik').value = parseInt(data.total_listrik) || 0;
+    document.getElementById('inp_air').value     = parseInt(data.total_air)     || 0;
+    document.getElementById('inp_wifi').value    = parseInt(data.total_wifi)    || 0;
+    document.getElementById('inp_lain').value    = parseInt(data.total_lain)    || 0;
     hitungTotal();
 }
 </script>

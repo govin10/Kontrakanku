@@ -16,6 +16,7 @@ if (isset($_GET['err'])) {
     };
 }
 if (isset($_GET['registered'])) $success = 'Registrasi berhasil! Silakan login.';
+if (isset($_GET['registered_admin'])) $success = 'Registrasi Admin berhasil! Silakan masuk dengan akun admin Anda.';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = trim($_POST['email']    ?? '');
@@ -102,7 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             id="email"
                             name="email"
                             class="form-control"
-                            placeholder="contoh@email.com"
+                            placeholder="contoh@gmail.com"
                             value="<?= htmlspecialchars($_POST['email'] ?? '') ?>"
                             required
                             autocomplete="email"
@@ -127,6 +128,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                 </div>
 
+                <div style="text-align:right; margin-top:-8px; margin-bottom:16px">
+                    <a href="<?= BASE_URL ?>/lupa_password.php" style="font-size:12.5px; color:var(--accent-primary); font-weight:500; transition:color 0.2s;" onmouseover="this.style.color='var(--accent-secondary)'" onmouseout="this.style.color='var(--accent-primary)'">
+                        <i class="fa-solid fa-key" style="margin-right:4px;"></i>Lupa Password?
+                    </a>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-block btn-lg" style="margin-top:8px">
                     <i class="fa-solid fa-right-to-bracket"></i>
                     Masuk
@@ -134,8 +141,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
 
-        <div class="auth-footer">
-            Belum punya akun? <a href="<?= BASE_URL ?>/register.php">Daftar sebagai Penghuni</a>
+        <div class="auth-footer" style="display:flex; flex-direction:column; gap:8px;">
+            <div>
+                Belum punya akun? <a href="<?= BASE_URL ?>/register.php">Daftar sebagai Penghuni</a>
+            </div>
+            <div style="font-size:12.5px; border-top:1px solid var(--border); padding-top:8px;">
+                Pengelola kontrakan? <a href="<?= BASE_URL ?>/register_admin.php" style="color:var(--accent-secondary);"><i class="fa-solid fa-user-shield"></i> Registrasi Admin</a>
+            </div>
         </div>
     </div>
 </div>
